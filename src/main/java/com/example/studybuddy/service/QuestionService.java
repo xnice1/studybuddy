@@ -4,7 +4,6 @@ import com.example.studybuddy.model.Question;
 import com.example.studybuddy.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Optional;
 import com.example.studybuddy.model.Quiz;
 import com.example.studybuddy.repository.QuizRepository;
 import jakarta.persistence.EntityNotFoundException;

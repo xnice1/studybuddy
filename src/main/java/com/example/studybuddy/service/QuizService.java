@@ -17,7 +17,7 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final CourseRepository courseRepository;
 
-    public QuizService(QuizRepository quizRepository) {
+    public QuizService(QuizRepository quizRepository, CourseRepository courseRepository) {
         this.quizRepository = quizRepository;
         this.courseRepository = courseRepository;
     }
