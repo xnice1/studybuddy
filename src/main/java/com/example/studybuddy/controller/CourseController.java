@@ -1,17 +1,21 @@
 package com.example.studybuddy.controller;
 
+import com.example.studybuddy.dto.CourseDTO;
 import com.example.studybuddy.model.Course;
+import com.example.studybuddy.model.User;
 import com.example.studybuddy.service.CourseService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {
+
     private final CourseService courseService;
 
     public CourseController(CourseService courseService) {
@@ -19,32 +23,34 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Course>> findAll() {
-        List<Course> course = courseService.findAll();
-        return ResponseEntity.ok(course);
+    public ResponseEntity<List<CourseDTO>> findAll() {
+        List<CourseDTO> dtos = courseService.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Course> findById(@PathVariable Long id) {
+    public ResponseEntity<CourseDTO> findById(@PathVariable Long id) {
         Course course = courseService.findById(id);
-        return ResponseEntity.ok(course);
+        return ResponseEntity.ok(toDTO(course));
     }
 
     @PostMapping
-    public ResponseEntity<Course> create(@RequestBody Course course) {
-        Course saved = courseService.save(course);
+    public ResponseEntity<CourseDTO> create(@RequestBody @Valid CourseDTO dto) {
+        Course saved = courseService.save(fromDTO(dto));
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(saved);
+                .body(toDTO(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Course> update(
+    public ResponseEntity<CourseDTO> update(
             @PathVariable Long id,
-            @RequestBody Course course
+            @RequestBody @Valid CourseDTO dto
     ) {
-        Course updated = courseService.update(id, course);
-        return ResponseEntity.ok(updated);
+        Course updated = courseService.update(id, fromDTO(dto));
+        return ResponseEntity.ok(toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
@@ -53,7 +59,23 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(EntityNotFoundException.class)
-    public void handleNotFound() {}
+    private CourseDTO toDTO(Course course) {
+        CourseDTO dto = new CourseDTO();
+        dto.setId(course.getId());
+        dto.setTitle(course.getTitle());
+        dto.setDescription(course.getDescription());
+        dto.setOwnerId(course.getOwner().getId());
+        return dto;
+    }
+
+    private Course fromDTO(CourseDTO dto) {
+        Course course = new Course();
+        course.setTitle(dto.getTitle());
+        course.setDescription(dto.getDescription());
+        User owner = new User();
+        owner.setId(dto.getOwnerId());
+        course.setOwner(owner);
+        return course;
+    }
 }
+

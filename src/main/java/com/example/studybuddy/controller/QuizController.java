@@ -1,17 +1,21 @@
 package com.example.studybuddy.controller;
 
+import com.example.studybuddy.dto.QuizDTO;
+import com.example.studybuddy.model.Course;
 import com.example.studybuddy.model.Quiz;
 import com.example.studybuddy.service.QuizService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/quizzes")
 public class QuizController {
+
     private final QuizService quizService;
 
     public QuizController(QuizService quizService) {
@@ -19,32 +23,34 @@ public class QuizController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Quiz>> findAll() {
-        List<Quiz> quiz = quizService.findAll();
-        return ResponseEntity.ok(quiz);
+    public ResponseEntity<List<QuizDTO>> findAll() {
+        List<QuizDTO> dtos = quizService.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Quiz> findById(@PathVariable Long id) {
+    public ResponseEntity<QuizDTO> findById(@PathVariable Long id) {
         Quiz quiz = quizService.findById(id);
-        return ResponseEntity.ok(quiz);
+        return ResponseEntity.ok(toDTO(quiz));
     }
 
     @PostMapping
-    public ResponseEntity<Quiz> create(@RequestBody Quiz quiz) {
-        Quiz saved = quizService.save(quiz);
+    public ResponseEntity<QuizDTO> create(@RequestBody @Valid QuizDTO dto) {
+        Quiz saved = quizService.save(fromDTO(dto));
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(saved);
+                .body(toDTO(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Quiz> update(
+    public ResponseEntity<QuizDTO> update(
             @PathVariable Long id,
-            @RequestBody Quiz quiz
+            @RequestBody @Valid QuizDTO dto
     ) {
-        Quiz updated = quizService.update(id, quiz);
-        return ResponseEntity.ok(updated);
+        Quiz updated = quizService.update(id, fromDTO(dto));
+        return ResponseEntity.ok(toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
@@ -53,7 +59,21 @@ public class QuizController {
         return ResponseEntity.noContent().build();
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(EntityNotFoundException.class)
-    public void handleNotFound() {}
+    private QuizDTO toDTO(Quiz quiz) {
+        QuizDTO dto = new QuizDTO();
+        dto.setId(quiz.getId());
+        dto.setTitle(quiz.getTitle());
+        dto.setCourseId(quiz.getCourse().getId());
+        return dto;
+    }
+
+    private Quiz fromDTO(QuizDTO dto) {
+        Quiz quiz = new Quiz();
+        quiz.setTitle(dto.getTitle());
+        Course course = new Course();
+        course.setId(dto.getCourseId());
+        quiz.setCourse(course);
+        return quiz;
+    }
 }
+
