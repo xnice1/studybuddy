@@ -39,14 +39,12 @@ public class AuthController {
         String username = creds.get("username");
         String rawPassword = creds.get("password");
 
-        // Check if user already exists
         if (userService.findByUsername(username).isPresent()) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body("Username already taken");
         }
 
-        // Encode the password
         User newUser = new User();
         newUser.setUsername(username);
         newUser.setPassword(passwordEncoder.encode(rawPassword));
@@ -68,9 +66,7 @@ public class AuthController {
             logger.warn("Bad credentials for user {}", creds.get("username"), ex);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         } catch (Exception ex) {
-            // <<< catch everything else >>>
             logger.error("Unexpected error during login for user {}", creds.get("username"), ex);
-            // return the exception message so we can see it in the response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of(
                             "error", ex.getClass().getSimpleName(),

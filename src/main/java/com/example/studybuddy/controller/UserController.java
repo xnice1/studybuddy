@@ -26,7 +26,7 @@ public class UserController {
     public ResponseEntity<UserDTO> create(@RequestBody @Valid UserDTO dto) {
         User saved = userService.save(fromDTO(dto));
         return ResponseEntity
-                .status(HttpStatus.CREATED)  // 201 Created
+                .status(HttpStatus.CREATED)
                 .body(toDTO(saved));
     }
 

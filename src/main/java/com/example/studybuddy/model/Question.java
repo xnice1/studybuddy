@@ -21,7 +21,7 @@ public class Question {
     @ElementCollection
     @CollectionTable(name = "question_answers", joinColumns = @JoinColumn(name = "question_id"))
     @Column(name = "correct_index")
-    private List<Integer> correctAnswers; // indexes of correct options
+    private List<Integer> correctAnswers;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "quiz_id")
