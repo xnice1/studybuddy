@@ -48,7 +48,7 @@ public class AuthController {
         User newUser = new User();
         newUser.setUsername(username);
         newUser.setPassword(passwordEncoder.encode(rawPassword));
-        newUser.setRole("STUDENT"); // or pass role in body if desired
+        newUser.setRole("STUDENT");
 
         userService.save(newUser);
         return ResponseEntity.status(HttpStatus.CREATED).build();
