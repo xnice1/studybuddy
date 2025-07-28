@@ -1,6 +1,8 @@
 package com.example.studybuddy.model;
 
 import jakarta.persistence.*;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,15 +20,15 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String role;
+    private String occupation= "STUDENT";
 
 
     public User() {}
 
-    public User(String username, String password, String role) {
+    public User(String username, String password, String occupation) {
         this.username = username;
         this.password = password;
-        this.role = role;
+        this.occupation = occupation;
     }
 
     public Long getId() { return id; }
@@ -38,6 +40,6 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public String getOccupation() { return occupation; }
+    public void setOccupation(String occupation) { this.occupation = occupation; }
 }

@@ -5,6 +5,7 @@ import com.example.studybuddy.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +13,10 @@ import java.util.Optional;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> findAll() {
@@ -33,11 +35,14 @@ public class UserService {
     public User save(User user) {
         return userRepository.save(user);
     }
+
     public User update(Long id, User updated) {
         User existing = findById(id);
         existing.setUsername(updated.getUsername());
-        existing.setPassword(updated.getPassword());
-        existing.setRole(updated.getRole());
+        if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
+            existing.setPassword(updated.getPassword());
+        }
+        existing.setOccupation(updated.getOccupation());
         return userRepository.save(existing);
     }
 

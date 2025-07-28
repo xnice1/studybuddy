@@ -4,8 +4,12 @@ import com.example.studybuddy.dto.CourseDTO;
 import com.example.studybuddy.model.Course;
 import com.example.studybuddy.model.User;
 import com.example.studybuddy.service.CourseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -14,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/courses")
+@Tag(name = "Courses")
 public class CourseController {
 
     private final CourseService courseService;
@@ -23,6 +28,7 @@ public class CourseController {
     }
 
     @GetMapping
+    @Operation(summary = "List all courses")
     public ResponseEntity<List<CourseDTO>> findAll() {
         List<CourseDTO> dtos = courseService.findAll().stream()
                 .map(this::toDTO)
@@ -31,12 +37,15 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get course by ID")
     public ResponseEntity<CourseDTO> findById(@PathVariable Long id) {
         Course course = courseService.findById(id);
         return ResponseEntity.ok(toDTO(course));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @Operation(summary = "Create a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> create(@RequestBody @Valid CourseDTO dto) {
         Course saved = courseService.save(fromDTO(dto));
         return ResponseEntity
@@ -44,7 +53,9 @@ public class CourseController {
                 .body(toDTO(saved));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
+    @Operation(summary = "Update a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> update(
             @PathVariable Long id,
             @RequestBody @Valid CourseDTO dto
@@ -53,7 +64,9 @@ public class CourseController {
         return ResponseEntity.ok(toDTO(updated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         courseService.deleteById(id);
         return ResponseEntity.noContent().build();

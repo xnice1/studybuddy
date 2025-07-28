@@ -64,6 +64,16 @@
 			<version>0.9.1</version>
 		</dependency>
 		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>1.6.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
+			<version>1.6.3</version>
+		</dependency>
+		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-annotations</artifactId>
 			<version>2.2.34</version>
@@ -77,7 +87,11 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 			<version>3.5.3</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-spring</artifactId>
+			<version>3.0.5</version>
+		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -111,8 +125,13 @@
 				<configuration>
 					<source>24</source>
 					<target>24</target>
-<!--					<compilerArgs>&#45;&#45;enable-preview</compilerArgs>-->
-				</configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>1.6.3</version>
+						</path>
+					</annotationProcessorPaths>				</configuration>
 			</plugin>
 		</plugins>
 	</build>

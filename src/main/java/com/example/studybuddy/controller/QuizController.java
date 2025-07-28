@@ -4,8 +4,12 @@ import com.example.studybuddy.dto.QuizDTO;
 import com.example.studybuddy.model.Course;
 import com.example.studybuddy.model.Quiz;
 import com.example.studybuddy.service.QuizService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -14,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/quizzes")
+@Tag(name = "Quizzes")
 public class QuizController {
 
     private final QuizService quizService;
@@ -23,6 +28,7 @@ public class QuizController {
     }
 
     @GetMapping
+    @Operation(summary = "List quizzes for a course")
     public ResponseEntity<List<QuizDTO>> findAll() {
         List<QuizDTO> dtos = quizService.findAll().stream()
                 .map(this::toDTO)
@@ -30,13 +36,16 @@ public class QuizController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<QuizDTO> findById(@PathVariable Long id) {
-        Quiz quiz = quizService.findById(id);
+    @GetMapping("/{quizId}")
+    @Operation(summary = "Get a quiz by ID")
+    public ResponseEntity<QuizDTO> findById(@PathVariable Long quizId) {
+        Quiz quiz = quizService.findById(quizId);
         return ResponseEntity.ok(toDTO(quiz));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @Operation(summary = "Create a quiz", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<QuizDTO> create(@RequestBody @Valid QuizDTO dto) {
         Quiz saved = quizService.save(fromDTO(dto));
         return ResponseEntity
@@ -44,18 +53,22 @@ public class QuizController {
                 .body(toDTO(saved));
     }
 
-    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{quizId}")
+    @Operation(summary = "Update a quiz", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<QuizDTO> update(
-            @PathVariable Long id,
+            @PathVariable Long quizId,
             @RequestBody @Valid QuizDTO dto
     ) {
-        Quiz updated = quizService.update(id, fromDTO(dto));
+        Quiz updated = quizService.update(quizId, fromDTO(dto));
         return ResponseEntity.ok(toDTO(updated));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        quizService.deleteById(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{quizId}")
+    @Operation(summary = "Delete a quiz", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<Void> delete(@PathVariable Long quizId) {
+        quizService.deleteById(quizId);
         return ResponseEntity.noContent().build();
     }
 

@@ -1,83 +1,75 @@
 package com.example.studybuddy.controller;
 
-import com.example.studybuddy.dto.UserDTO;
+import com.example.studybuddy.dto.RegistrationRequest;
+import com.example.studybuddy.dto.UserResponse;
+import com.example.studybuddy.mapper.UserMapper;
 import com.example.studybuddy.model.User;
 import com.example.studybuddy.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
-
+public class  UserController {
     private final UserService userService;
-
-    public UserController(UserService userService) {
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    public UserController(UserService userService, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userService = userService;
-    }
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
 
-    @PostMapping
-    public ResponseEntity<UserDTO> create(@RequestBody @Valid UserDTO dto) {
-        User saved = userService.save(fromDTO(dto));
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(toDTO(saved));
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDTO>> findAll() {
-        List<UserDTO> dtos = userService.findAll().stream()
-                .map(this::toDTO)
+    public ResponseEntity<List<UserResponse>> getAll() {
+        List<UserResponse> users = userService.findAll().stream()
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> findById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
         User user = userService.findById(id);
-        return ResponseEntity.ok(toDTO(user));
+        return ResponseEntity.ok(userMapper.toResponse(user));
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody RegistrationRequest req) {
+        User entity = userMapper.toEntity(req);
+        entity.setPassword(passwordEncoder.encode(req.getPassword()));
+        User saved = userService.save(entity);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userMapper.toResponse(saved));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> update(
+    public ResponseEntity<UserResponse> update(
             @PathVariable Long id,
-            @RequestBody @Valid UserDTO dto
+            @Valid @RequestBody RegistrationRequest req
     ) {
-        User updated = userService.update(id, fromDTO(dto));
-        return ResponseEntity.ok(toDTO(updated));
+        User toUpdate = new User();
+        toUpdate.setUsername(req.getUsername());
+        toUpdate.setPassword(passwordEncoder.encode(req.getPassword()));
+        toUpdate.setOccupation(req.getOccupation());
+        User updated = userService.update(id, toUpdate);
+        return ResponseEntity.ok(userMapper.toResponse(updated));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
-    }
-
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(EntityNotFoundException.class)
-    public void handleNotFound() {
-    }
-
-    private UserDTO toDTO(User u) {
-        UserDTO dto = new UserDTO();
-        dto.setId(u.getId());
-        dto.setUsername(u.getUsername());
-        dto.setRole(u.getRole());
-        return dto;
-    }
-
-    private User fromDTO(UserDTO dto) {
-        User u = new User();
-        u.setUsername(dto.getUsername());
-        u.setPassword(dto.getPassword());
-        u.setRole(dto.getRole());
-        return u;
     }
 }

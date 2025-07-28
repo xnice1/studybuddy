@@ -16,7 +16,7 @@ public class UserDTO {
     private String password;
 
     @NotBlank(message = "Role is required")
-    private String role;
+    private String occupation;
 
     public Long getId() {
         return id;
@@ -42,11 +42,11 @@ public class UserDTO {
         this.password = password;
     }
 
-    public String getRole() {
-        return role;
+    public String getOccupation() {
+        return occupation;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setOccupation(String occupation) {
+        this.occupation = occupation;
     }
 }
