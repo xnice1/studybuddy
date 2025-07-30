@@ -61,7 +61,7 @@ public class  UserController {
         User toUpdate = new User();
         toUpdate.setUsername(req.getUsername());
         toUpdate.setPassword(passwordEncoder.encode(req.getPassword()));
-        toUpdate.setOccupation(req.getOccupation());
+        toUpdate.setRole(req.getRole());
         User updated = userService.update(id, toUpdate);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }

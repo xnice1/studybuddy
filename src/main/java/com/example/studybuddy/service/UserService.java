@@ -42,7 +42,7 @@ public class UserService {
         if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
             existing.setPassword(updated.getPassword());
         }
-        existing.setOccupation(updated.getOccupation());
+        existing.setRole(updated.getRole());
         return userRepository.save(existing);
     }
 
