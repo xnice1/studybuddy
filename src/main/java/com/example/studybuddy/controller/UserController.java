@@ -45,7 +45,7 @@ public class  UserController {
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody RegistrationRequest req) {
         User entity = userMapper.toEntity(req);
-        entity.setPassword(passwordEncoder.encode(req.getPassword()));
+        entity.setPassword(req.getPassword());
         User saved = userService.save(entity);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -60,7 +60,7 @@ public class  UserController {
     ) {
         User toUpdate = new User();
         toUpdate.setUsername(req.getUsername());
-        toUpdate.setPassword(passwordEncoder.encode(req.getPassword()));
+        toUpdate.setPassword(req.getPassword());
         toUpdate.setRole(req.getRole());
         User updated = userService.update(id, toUpdate);
         return ResponseEntity.ok(userMapper.toResponse(updated));

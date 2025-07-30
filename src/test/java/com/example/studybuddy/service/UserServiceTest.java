@@ -1,5 +1,5 @@
 package com.example.studybuddy.service;
-
+import static org.mockito.ArgumentMatchers.any;
 import com.example.studybuddy.model.User;
 import com.example.studybuddy.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,7 +31,7 @@ class UserServiceTest {
         MockitoAnnotations.openMocks(this);
         alice = new User();
         alice.setId(1L);
-        alice.setUsername("alice1");
+        alice.setUsername("alice");
         alice.setPassword("rawpass");
         alice.setRole("STUDENT");
     }
@@ -39,7 +39,7 @@ class UserServiceTest {
     @Test
     void save_encodesPasswordAndSaves() {
         when(passwordEncoder.encode("rawpass")).thenReturn("enc");
-        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         User saved = userService.save(alice);
 
@@ -61,7 +61,6 @@ class UserServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found");
     }
-
     @Test
     void update_changesFieldsAndReEncodes() {
         User updated = new User();
@@ -71,12 +70,14 @@ class UserServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
         when(passwordEncoder.encode("newpass")).thenReturn("encNew");
-        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
         User result = userService.update(1L, updated);
+        verify(passwordEncoder).encode("newpass");
         assertThat(result.getUsername()).isEqualTo("alice2");
         assertThat(result.getPassword()).isEqualTo("encNew");
         assertThat(result.getRole()).isEqualTo("ADMIN");
+        verify(userRepository).save(result);
     }
 
     @Test

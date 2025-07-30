@@ -33,6 +33,8 @@ public class UserService {
     }
 
     public User save(User user) {
+        String encoded_password = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encoded_password);
         return userRepository.save(user);
     }
 
@@ -40,7 +42,9 @@ public class UserService {
         User existing = findById(id);
         existing.setUsername(updated.getUsername());
         if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
-            existing.setPassword(updated.getPassword());
+            String encoded = passwordEncoder.encode(updated.getPassword());
+            existing.setPassword(encoded);
+
         }
         existing.setRole(updated.getRole());
         return userRepository.save(existing);
