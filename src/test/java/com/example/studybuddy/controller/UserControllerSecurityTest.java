@@ -1,49 +1,77 @@
 package com.example.studybuddy.controller;
 
-import com.example.studybuddy.controller.UserController;
 import com.example.studybuddy.dto.UserResponse;
-import com.example.studybuddy.mapper.UserMapper;
-import com.example.studybuddy.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.studybuddy.model.User;
+import com.example.studybuddy.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.List;
-
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
-class UserControllerStandaloneTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+class UserControllerIntegrationTest {
 
-    @Mock UserService userService;
-    @Mock UserMapper  userMapper;
-
-    @InjectMocks
-    UserController userController;
-
+    @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(userController)
-                .build();
+        userRepository.deleteAll();
+
+        User alice = new User();
+        alice.setUsername("alice");
+        alice.setPassword("irrelevant");
+        alice.setRole("ADMIN");
+        userRepository.save(alice);
+
+        User bob = new User();
+        bob.setUsername("bob");
+        bob.setPassword("irrelevant");
+        bob.setRole("STUDENT");
+        userRepository.save(bob);
     }
 
     @Test
-    void listUsers_returns200() throws Exception {
-        var dummy = new UserResponse(1L, "alice", "STUDENT");
-        when(userService.findAll()).thenReturn(List.of());
-        when(userMapper.toResponse(any())).thenReturn(dummy);
-
-        mockMvc.perform(get("/api/users"))
+    @WithMockUser(username="admin", roles={"ADMIN"})
+    void listUsers_returnsAllUsers() throws Exception {
+        mockMvc.perform(get("/api/users")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].username").value("alice"));
+    }
+
+    @Test
+    @WithMockUser(username="admin", roles={"ADMIN"})
+    void listUsers_responseMapsToDto() throws Exception {
+        var mvcResult = mockMvc.perform(get("/api/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String json = mvcResult.getResponse().getContentAsString();
+        UserResponse[] responses = objectMapper.readValue(json, UserResponse[].class);
+
+        assertThat(responses).hasSize(2);
+        assertThat(responses)
+                .extracting(UserResponse::getUsername)
+                .containsExactlyInAnyOrder("alice", "bob");
     }
 }
