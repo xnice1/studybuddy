@@ -1,7 +1,6 @@
 package com.example.studybuddy.controller;
 
 import com.example.studybuddy.dto.CourseDTO;
-import com.example.studybuddy.dto.CourseDTO;
 import com.example.studybuddy.model.Course;
 import com.example.studybuddy.model.User;
 import com.example.studybuddy.repository.CourseRepository;
@@ -22,7 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-// Replace any real datasource with H2 for tests
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 class CourseControllerIntegrationTest {
 
@@ -43,25 +41,21 @@ class CourseControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // clean slate
         courseRepo.deleteAll();
         userRepo.deleteAll();
 
-        // seed an ADMIN (for delete + update + create tests)
         adminUser = new User();
         adminUser.setUsername("superadmin");
         adminUser.setPassword("irrelevant");
         adminUser.setRole("ADMIN");
         userRepo.save(adminUser);
 
-        // seed an INSTRUCTOR to own courses
         instructor = new User();
         instructor.setUsername("inst1");
         instructor.setPassword("irrelevant");
         instructor.setRole("INSTRUCTOR");
         userRepo.save(instructor);
 
-        // seed two courses owned by instructor
         Course c1 = new Course();
         c1.setTitle("Math 101");
         c1.setDescription("Basic Math");
@@ -89,7 +83,6 @@ class CourseControllerIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void findById_returnsCorrectCourse() throws Exception {
-        // grab one ID
         Long id = courseRepo.findAll().get(0).getId();
 
         mockMvc.perform(get("/api/courses/{id}", id)
@@ -116,7 +109,6 @@ class CourseControllerIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Chemistry"))
                 .andExpect(jsonPath("$.ownerId").value(instructor.getId()));
 
-        // database now has 3 courses
         assertThat(courseRepo.count()).isEqualTo(3);
     }
 
