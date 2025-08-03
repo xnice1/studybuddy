@@ -74,7 +74,7 @@ class UserControllerIntegrationTest {
     void getById_notFound() throws Exception {
         mockMvc.perform(get("/api/users/{id}", 9999L)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());  // was 404
+                .andExpect(status().isNotFound());
     }
 
 
