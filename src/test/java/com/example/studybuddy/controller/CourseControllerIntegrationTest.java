@@ -82,6 +82,17 @@ class CourseControllerIntegrationTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void findById_notFound() throws Exception {
+        mockMvc.perform(get("/api/courses/{id}", 12345L))
+                .andExpect(status().isNotFound());
+    }
+    void anyEndpoint_unauthenticated_getsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/courses"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void findById_returnsCorrectCourse() throws Exception {
         Long id = courseRepo.findAll().get(0).getId();
 
@@ -124,6 +135,33 @@ class CourseControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createCourse_missingTitle_badRequest() throws Exception {
+        CourseDTO dto = new CourseDTO();
+        dto.setDescription("No title");
+        dto.setOwnerId(instructor.getId());
+
+        mockMvc.perform(post("/api/courses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createCourse_ownerNotFound_notFound() throws Exception {
+        CourseDTO dto = new CourseDTO();
+        dto.setTitle("Ghost Course");
+        dto.setDescription("Owner missing");
+        dto.setOwnerId(9999L);
+
+        mockMvc.perform(post("/api/courses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
