@@ -16,9 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * Integration tests for QuizService, backed by an in-memory H2 via @DataJpaTest.
- */
+
 @DataJpaTest
 @Import(QuizService.class)
 class QuizServiceIntegrationTest {
@@ -29,6 +27,7 @@ class QuizServiceIntegrationTest {
     @Autowired private UserRepository userRepo;
     private Course savedCourse;
     private User savedOwner;
+
     @BeforeEach
     void setUp() {
         quizRepo.deleteAll();
@@ -39,13 +38,12 @@ class QuizServiceIntegrationTest {
         owner.setUsername("courseOwner");
         owner.setPassword("irrelevant");
         owner.setRole("INSTRUCTOR");
-        User savedOwner = userRepo.save(owner);
+        savedOwner = userRepo.save(owner);
 
-        // 2) now create and save your course WITH that owner
         Course c = new Course();
         c.setTitle("Geography");
         c.setDescription("World facts");
-        c.setOwner(savedOwner);              // ← important!
+        c.setOwner(savedOwner);
         savedCourse = courseRepo.save(c);
     }
 
@@ -73,7 +71,6 @@ class QuizServiceIntegrationTest {
     void save_missingCourse_throws() {
         Quiz q = new Quiz();
         q.setTitle("No Course Quiz");
-        // fake course id
         Course fake = new Course();
         fake.setId(999L);
         q.setCourse(fake);
@@ -104,16 +101,13 @@ class QuizServiceIntegrationTest {
 
     @Test
     void update_changesTitleAndKeepsCourse() {
-        // seed
         Quiz q = new Quiz();
         q.setTitle("Old title");
         q.setCourse(savedCourse);
         Quiz saved = quizRepo.save(q);
 
-        // prepare update DTO
         Quiz update = new Quiz();
         update.setTitle("New title");
-        // leave course null → should keep the same
         update.setCourse(null);
 
         Quiz result = quizService.update(saved.getId(), update);
@@ -124,37 +118,31 @@ class QuizServiceIntegrationTest {
 
     @Test
     void update_changeCourseToAnother() {
-        // 1) seed initial quiz on savedCourse from @BeforeEach
         Quiz q = new Quiz();
         q.setTitle("Switch Course");
         q.setCourse(savedCourse);
         Quiz savedQuiz = quizRepo.save(q);
 
-        // 2) seed second course *with* an owner
         Course c2 = new Course();
         c2.setTitle("Biology");
         c2.setDescription("Life sciences");
-        c2.setOwner(savedOwner);            // ← must attach the same owner
+        c2.setOwner(savedOwner);
         Course saved2 = courseRepo.save(c2);
 
-        // 3) prepare update payload pointing at the new course id
         Quiz update = new Quiz();
         update.setTitle("Switch Course");
         Course proxy = new Course();
         proxy.setId(saved2.getId());
         update.setCourse(proxy);
 
-        // 4) exercise your service
         Quiz result = quizService.update(savedQuiz.getId(), update);
 
-        // 5) assert we really switched
         assertThat(result.getCourse().getId()).isEqualTo(saved2.getId());
     }
 
 
     @Test
     void update_unknownCourse_throws() {
-        // seed quiz
         Quiz q = new Quiz();
         q.setTitle("Bad update");
         q.setCourse(savedCourse);
