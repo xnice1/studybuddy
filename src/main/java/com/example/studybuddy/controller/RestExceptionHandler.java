@@ -9,26 +9,32 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.*;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class RestExceptionHandler {
 
+    public static class ValidationErrorResponse {
+        private final Map<String, String> errors;
+        public ValidationErrorResponse(Map<String, String> errors) {
+            this.errors = errors;
+        }
+        public Map<String, String> getErrors() {
+            return errors;
+        }
+    }
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Void> handleNotFound(EntityNotFoundException ex) {
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String,String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorResponse handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         FieldError::getDefaultMessage,
-                        (msg1,msg2) -> msg1
+                        (msg1, msg2) -> msg1
                 ));
-        return ResponseEntity
-                .badRequest()
-                .body(Map.of("errors", errors.toString()));
+        return new ValidationErrorResponse(errors);
     }
 }

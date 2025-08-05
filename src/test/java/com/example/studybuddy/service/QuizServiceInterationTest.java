@@ -82,7 +82,6 @@ class QuizServiceIntegrationTest {
 
     @Test
     void findById_existing_returnsQuiz() {
-        // first persist
         Quiz q = new Quiz();
         q.setTitle("Geo Quiz");
         q.setCourse(savedCourse);
