@@ -1,6 +1,7 @@
 package com.example.studybuddy.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,12 +17,12 @@ public class Question {
     @ElementCollection
     @CollectionTable(name = "question_options", joinColumns = @JoinColumn(name = "question_id"))
     @Column(name = "option_text")
-    private List<String> options;
+    private List<String> options = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "question_answers", joinColumns = @JoinColumn(name = "question_id"))
     @Column(name = "correct_index")
-    private List<Integer> correctAnswers;
+    private List<Integer> correctAnswers = new ArrayList<>();
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "quiz_id")
@@ -43,10 +44,20 @@ public class Question {
     public void setText(String text) { this.text = text; }
 
     public List<String> getOptions() { return options; }
-    public void setOptions(List<String> options) { this.options = options; }
+    public void setOptions(List<String> opts) {
+        this.options.clear();
+        if (opts != null) {
+            this.options.addAll(opts);
+        }
+    }
 
     public List<Integer> getCorrectAnswers() { return correctAnswers; }
-    public void setCorrectAnswers(List<Integer> correctAnswers) { this.correctAnswers = correctAnswers; }
+    public void setCorrectAnswers(List<Integer> ans) {
+        this.correctAnswers.clear();
+        if (ans != null) {
+            this.correctAnswers.addAll(ans);
+        }
+    }
 
     public Quiz getQuiz() { return quiz; }
     public void setQuiz(Quiz quiz) { this.quiz = quiz; }

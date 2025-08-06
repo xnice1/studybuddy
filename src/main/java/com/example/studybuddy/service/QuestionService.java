@@ -42,13 +42,19 @@ public class QuestionService {
 
     public Question update(Long id, Question updated) {
         Question existing = findById(id);
+
         existing.setText(updated.getText());
-        existing.setOptions(updated.getOptions());
-        existing.setCorrectAnswers(updated.getCorrectAnswers());
+
+        existing.getOptions().clear();
+        existing.getOptions().addAll(updated.getOptions());
+
+        existing.getCorrectAnswers().clear();
+        existing.getCorrectAnswers().addAll(updated.getCorrectAnswers());
+
         if (updated.getQuiz() != null) {
-            Long newQuizId = updated.getQuiz().getId();
-            Quiz newQuiz = quizRepository.findById(newQuizId)
-                    .orElseThrow(() -> new EntityNotFoundException("Quiz not found with id " + newQuizId));
+            Quiz newQuiz = quizRepository.findById(updated.getQuiz().getId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Quiz not found with id " + updated.getQuiz().getId()));
             existing.setQuiz(newQuiz);
         }
         return questionRepository.save(existing);
