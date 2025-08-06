@@ -43,7 +43,7 @@ public class CourseController {
         return ResponseEntity.ok(toDTO(course));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isUserSelf(principal.username, #dto.ownerId)")
     @PostMapping
     @Operation(summary = "Create a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> create(@RequestBody @Valid CourseDTO dto) {
@@ -53,7 +53,7 @@ public class CourseController {
                 .body(toDTO(saved));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @PutMapping("/{id}")
     @Operation(summary = "Update a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> update(
@@ -64,7 +64,7 @@ public class CourseController {
         return ResponseEntity.ok(toDTO(updated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> delete(@PathVariable Long id) {

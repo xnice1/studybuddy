@@ -12,14 +12,7 @@ import java.util.stream.*;
 @RestControllerAdvice
 public class RestExceptionHandler {
 
-    public static class ValidationErrorResponse {
-        private final Map<String, String> errors;
-        public ValidationErrorResponse(Map<String, String> errors) {
-            this.errors = errors;
-        }
-        public Map<String, String> getErrors() {
-            return errors;
-        }
+    public record ValidationErrorResponse(Map<String, String> errors) {
     }
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Void> handleNotFound(EntityNotFoundException ex) {
@@ -30,6 +23,7 @@ public class RestExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorResponse handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = ex.getFieldErrors().stream()
+                .filter(fe -> fe.getDefaultMessage() != null)
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         FieldError::getDefaultMessage,
