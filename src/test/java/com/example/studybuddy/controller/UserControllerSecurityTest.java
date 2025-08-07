@@ -1,8 +1,12 @@
 package com.example.studybuddy.controller;
 
 import com.example.studybuddy.model.User;
+import com.example.studybuddy.repository.CourseRepository;
+import com.example.studybuddy.repository.QuestionRepository;
+import com.example.studybuddy.repository.QuizRepository;
 import com.example.studybuddy.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,11 +30,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@Transactional
 class UserControllerIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    QuestionRepository questionRepo;
+    @Autowired
+    QuizRepository quizRepo;
+    @Autowired
+    CourseRepository courseRepo;
     @Autowired
     UserRepository userRepository;
 
@@ -41,8 +52,10 @@ class UserControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        questionRepo.deleteAll();
+        quizRepo.deleteAll();
+        courseRepo.deleteAll();
         userRepository.deleteAll();
-
         User alice = new User();
         alice.setUsername("alice");
         alice.setPassword("irrelevant");
@@ -90,7 +103,7 @@ class UserControllerIntegrationTest {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isCreated())   // expect 201 now
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("charlie"))
                 .andExpect(jsonPath("$.role").value("STUDENT"));
 

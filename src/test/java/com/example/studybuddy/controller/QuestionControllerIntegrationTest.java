@@ -37,24 +37,22 @@ class QuestionControllerIntegrationTest {
     @Autowired private QuestionRepository questionRepo;
     @Autowired private ObjectMapper objectMapper;
 
-    private User owner;
-    private Course course;
     private Quiz quiz;
 
     @BeforeEach
     void setUp() {
-        questionRepo.deleteAll();
         quizRepo.deleteAll();
         courseRepo.deleteAll();
         userRepo.deleteAll();
 
+        User owner;
         owner = new User();
         owner.setUsername("owner1");
         owner.setPassword("password1");
         owner.setRole("ADMIN");
         owner = userRepo.save(owner);
 
-        course = new Course();
+        Course course = new Course();
         course.setTitle("Test Course");
         course.setDescription("Desc");
         course.setOwner(owner);

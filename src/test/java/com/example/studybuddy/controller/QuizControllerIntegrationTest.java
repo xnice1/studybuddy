@@ -32,8 +32,7 @@ class QuizControllerIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private UserRepository userRepo;
 
-    private User instructor;
-    private Course course;
+    Course course = new Course();
 
     @BeforeEach
     void setUp() {
@@ -41,12 +40,15 @@ class QuizControllerIntegrationTest {
         courseRepo.deleteAll();
         userRepo.deleteAll();
 
+
+        User instructor = new User();
         instructor = new User();
         instructor.setUsername("inst1");
         instructor.setPassword("irrelevant");
         instructor.setRole("INSTRUCTOR");
         instructor = userRepo.save(instructor);
 
+        
         course = new Course();
         course.setTitle("History 101");
         course.setDescription("Ancient civilizations");

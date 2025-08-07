@@ -36,7 +36,6 @@ class CourseControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private User adminUser;
     private User instructor;
 
     @BeforeEach
@@ -44,7 +43,7 @@ class CourseControllerIntegrationTest {
         courseRepo.deleteAll();
         userRepo.deleteAll();
 
-        adminUser = new User();
+        User adminUser = new User();
         adminUser.setUsername("superadmin");
         adminUser.setPassword("irrelevant");
         adminUser.setRole("ADMIN");
