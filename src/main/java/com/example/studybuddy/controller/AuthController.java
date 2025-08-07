@@ -50,7 +50,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         User entity = userMapper.toEntity(req);
-        entity.setPassword(passwordEncoder.encode(req.getPassword()));
         User saved = userService.save(entity);
         UserResponse resp = userMapper.toResponse(saved);
 
@@ -58,7 +57,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody RegistrationRequest creds) {
+    public ResponseEntity<?> login(@Valid @RequestBody RegistrationRequest creds) {
         try {
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
