@@ -12,8 +12,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -26,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AuthControllerIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
@@ -34,14 +38,18 @@ class AuthControllerIntegrationTest {
     @Autowired private PasswordEncoder passwordEncoder;
 
     @BeforeEach
-    void cleanUp() {
+    void setUp() {
         userRepository.deleteAll();
+        User u = new User();
+        u.setUsername("jane");
+        u.setPassword(passwordEncoder.encode("letMeIn123"));
+        u.setRole("STUDENT");
+        userRepository.save(u);
     }
 
     @Test
     void register_newUser_returns201AndSaves() throws Exception {
         long before = userRepository.count();
-        assertThat(before).isZero();
 
         RegistrationRequest req = new RegistrationRequest();
         req.setUsername("new_user");
@@ -96,17 +104,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void login_validCredentials_returns200AndToken() throws Exception {
-        // seed a user
-        var u = new com.example.studybuddy.model.User();
-        u.setUsername("login1");
-        u.setPassword(passwordEncoder.encode("letM3in!"));
-        u.setRole("STUDENT");
-        userRepository.save(u);
-
-        // attempt login
-        RegistrationRequest creds = new RegistrationRequest();
-        creds.setUsername("login1");
-        creds.setPassword("letM3in!");
+        var creds = Map.of("username", "jane", "password", "letMeIn123");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -114,7 +112,6 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isString());
     }
-
     @Test
     void login_badCredentials_returns401() throws Exception {
         var u = new com.example.studybuddy.model.User();
