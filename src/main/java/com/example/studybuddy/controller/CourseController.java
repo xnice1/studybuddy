@@ -27,8 +27,9 @@ public class CourseController {
         this.courseService = courseService;
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isUserSelf(principal.username, #dto.ownerId)")
     @GetMapping
-    @Operation(summary = "List all courses")
+    @Operation(summary = "List all courses", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<CourseDTO>> findAll() {
         List<CourseDTO> dtos = courseService.findAll().stream()
                 .map(this::toDTO)
@@ -36,8 +37,9 @@ public class CourseController {
         return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isUserSelf(principal.username, #dto.ownerId)")
     @GetMapping("/{id}")
-    @Operation(summary = "Get course by ID")
+    @Operation(summary = "Get course by ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> findById(@PathVariable Long id) {
         Course course = courseService.findById(id);
         return ResponseEntity.ok(toDTO(course));
