@@ -46,9 +46,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html**", "/webjars/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/courses/**").hasRole("ADMIN")
-                        .requestMatchers("/api/quizzes/**").hasRole("ADMIN")
-                        .requestMatchers("/api/quizzes/*/questions/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/courses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/quizzes/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/quizzes/*/questions/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

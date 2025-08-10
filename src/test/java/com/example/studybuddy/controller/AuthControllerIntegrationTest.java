@@ -39,6 +39,7 @@ class AuthControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+
         userRepository.deleteAll();
         User u = new User();
         u.setUsername("jane");
