@@ -1,8 +1,8 @@
 package com.example.studybuddy.controller;
 
 import com.example.studybuddy.dto.CourseDTO;
+import com.example.studybuddy.dto.CreateCourseDTO;
 import com.example.studybuddy.model.Course;
-import com.example.studybuddy.model.User;
 import com.example.studybuddy.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,47 +27,45 @@ public class CourseController {
         this.courseService = courseService;
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isUserSelf(principal.username, #dto.ownerId)")
     @GetMapping
-    @Operation(summary = "List all courses", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasRole('ADMIN') or isAuthenticated()")
+    @Operation(summary = "List all courses (admin=all, user=their courses)", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<CourseDTO>> findAll() {
-        List<CourseDTO> dtos = courseService.findAll().stream()
+        List<CourseDTO> dtos = courseService.findAllForCurrentUser().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isUserSelf(principal.username, #dto.ownerId)")
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @Operation(summary = "Get course by ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> findById(@PathVariable Long id) {
         Course course = courseService.findById(id);
         return ResponseEntity.ok(toDTO(course));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isUserSelf(principal.username, #dto.ownerId)")
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create a course", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<CourseDTO> create(@RequestBody @Valid CourseDTO dto) {
-        Course saved = courseService.save(fromDTO(dto));
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(toDTO(saved));
+    public ResponseEntity<CourseDTO> create(@Valid @RequestBody CreateCourseDTO dto) {
+        Course saved = courseService.createCourse(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(saved));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @Operation(summary = "Update a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> update(
             @PathVariable Long id,
-            @RequestBody @Valid CourseDTO dto
+            @Valid @RequestBody CreateCourseDTO dto
     ) {
-        Course updated = courseService.update(id, fromDTO(dto));
+        Course updated = courseService.updateFromDto(id, dto);
         return ResponseEntity.ok(toDTO(updated));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
     @Operation(summary = "Delete a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         courseService.deleteById(id);
@@ -83,14 +81,4 @@ public class CourseController {
         return dto;
     }
 
-    private Course fromDTO(CourseDTO dto) {
-        Course course = new Course();
-        course.setTitle(dto.getTitle());
-        course.setDescription(dto.getDescription());
-        User owner = new User();
-        owner.setId(dto.getOwnerId());
-        course.setOwner(owner);
-        return course;
-    }
 }
-
