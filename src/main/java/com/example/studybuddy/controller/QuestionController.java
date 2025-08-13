@@ -1,8 +1,8 @@
 package com.example.studybuddy.controller;
 
+import com.example.studybuddy.dto.CreateQuestionDTO;
 import com.example.studybuddy.dto.QuestionDTO;
 import com.example.studybuddy.model.Question;
-import com.example.studybuddy.model.Quiz;
 import com.example.studybuddy.service.QuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,46 +29,48 @@ public class QuestionController {
 
     @GetMapping
     @Operation(summary = "List questions for a quiz")
-    public ResponseEntity<List<QuestionDTO>> findAll() {
-        List<QuestionDTO> dtos = questionService.findAll().stream()
+    public ResponseEntity<List<QuestionDTO>> findAll(@PathVariable Long quizId) {
+        List<QuestionDTO> dtos = questionService.findAllByQuiz(quizId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{questionId}")
     @Operation(summary = "Get a question by ID")
-    public ResponseEntity<QuestionDTO> findById(@PathVariable Long id) {
-        Question question = questionService.findById(id);
+    public ResponseEntity<QuestionDTO> findById(@PathVariable Long quizId, @PathVariable Long questionId) {
+        Question question = questionService.findById(questionId);
+        if (!question.getQuiz().getId().equals(quizId)) {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.ok(toDTO(question));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','INSTRUCTOR')")
     @PostMapping
     @Operation(summary = "Add a question", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<QuestionDTO> create(@RequestBody @Valid QuestionDTO dto) {
-        Question saved = questionService.save(fromDTO(dto));
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(toDTO(saved));
+    public ResponseEntity<QuestionDTO> create(@PathVariable Long quizId, @RequestBody @Valid CreateQuestionDTO dto) {
+        Question saved = questionService.createQuestion(quizId, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(saved));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','INSTRUCTOR')")
     @PutMapping("/{questionId}")
     @Operation(summary = "Update a question", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<QuestionDTO> update(
+            @PathVariable Long quizId,
             @PathVariable Long questionId,
-            @RequestBody @Valid QuestionDTO dto
+            @RequestBody @Valid CreateQuestionDTO dto
     ) {
-        Question updated = questionService.update(questionId, fromDTO(dto));
+        Question updated = questionService.updateQuestion(quizId, questionId, dto);
         return ResponseEntity.ok(toDTO(updated));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','INSTRUCTOR')")
     @DeleteMapping("/{questionId}")
     @Operation(summary = "Delete a question", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<Void> delete(@PathVariable Long questionId) {
-        questionService.deleteById(questionId);
+    public ResponseEntity<Void> delete(@PathVariable Long quizId, @PathVariable Long questionId) {
+        questionService.deleteById(quizId, questionId);
         return ResponseEntity.noContent().build();
     }
 
@@ -80,16 +82,5 @@ public class QuestionController {
         dto.setCorrectAnswers(q.getCorrectAnswers());
         dto.setQuizId(q.getQuiz().getId());
         return dto;
-    }
-
-    private Question fromDTO(QuestionDTO dto) {
-        Question q = new Question();
-        q.setText(dto.getText());
-        q.setOptions(dto.getOptions());
-        q.setCorrectAnswers(dto.getCorrectAnswers());
-        Quiz quiz = new Quiz();
-        quiz.setId(dto.getQuizId());
-        q.setQuiz(quiz);
-        return q;
     }
 }
