@@ -22,10 +22,7 @@ public class CourseSecurity {
         this.users = users;
     }
 
-    /**
-     * True when the course exists and its owner username equals the supplied username.
-     * Safe against missing course, missing owner, or null usernames.
-     */
+
     public boolean isCourseOwner(String username, Long courseId) {
         if (username == null || courseId == null) {
             return false;

@@ -1,6 +1,7 @@
 package com.example.studybuddy.controller;
 
 import com.example.studybuddy.dto.QuizDTO;
+import com.example.studybuddy.dto.CreateQuizDTO;
 import com.example.studybuddy.model.Course;
 import com.example.studybuddy.model.Quiz;
 import com.example.studybuddy.service.QuizService;
@@ -43,14 +44,12 @@ public class QuizController {
         return ResponseEntity.ok(toDTO(quiz));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','INSTRUCTOR')")
     @PostMapping
     @Operation(summary = "Create a quiz", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<QuizDTO> create(@RequestBody @Valid QuizDTO dto) {
-        Quiz saved = quizService.save(fromDTO(dto));
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(toDTO(saved));
+    public ResponseEntity<QuizDTO> create(@RequestBody @Valid CreateQuizDTO dto) {
+        Quiz saved = quizService.createQuiz(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(saved));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

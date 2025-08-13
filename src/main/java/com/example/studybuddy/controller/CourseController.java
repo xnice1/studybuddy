@@ -46,7 +46,7 @@ public class CourseController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN','INSTRUCTOR')")
     @Operation(summary = "Create a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> create(@Valid @RequestBody CreateCourseDTO dto) {
         Course saved = courseService.createCourse(dto);
