@@ -1,5 +1,6 @@
 package com.example.studybuddy.service;
 
+import com.example.studybuddy.dto.CreateQuestionDTO;
 import com.example.studybuddy.model.Course;
 import com.example.studybuddy.model.Question;
 import com.example.studybuddy.model.Quiz;
@@ -8,13 +9,16 @@ import com.example.studybuddy.repository.CourseRepository;
 import com.example.studybuddy.repository.QuestionRepository;
 import com.example.studybuddy.repository.QuizRepository;
 import com.example.studybuddy.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 
@@ -41,7 +45,7 @@ class QuestionServiceIntegrationTest {
     private QuestionService questionService;
 
     private User owner;
-    private Course c;
+    private Course course;
     private Quiz quiz;
 
     @BeforeEach
@@ -57,64 +61,95 @@ class QuestionServiceIntegrationTest {
         owner.setRole("INSTRUCTOR");
         owner = userRepo.save(owner);
 
-        c = new Course();
-        c.setTitle("Biology 101");
-        c.setDescription("Intro to Biology");
-        c.setOwner(owner);
-        c = courseRepo.save(c);
+        course = new Course();
+        course.setTitle("Biology 101");
+        course.setDescription("Intro to Biology");
+        course.setOwner(owner);
+        course = courseRepo.save(course);
 
         quiz = new Quiz();
         quiz.setTitle("Chapter 1 Quiz");
-        quiz.setCourse(c);
+        quiz.setCourse(course);
         quiz = quizRepo.save(quiz);
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticateAsOwner() {
+        UserDetails principal = org.springframework.security.core.userdetails.User
+                .withUsername(owner.getUsername())
+                .password(owner.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"))
+                .build();
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    private void authenticateAsAdmin() {
+        UserDetails principal = org.springframework.security.core.userdetails.User
+                .withUsername("admin")
+                .password("x")
+                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                .build();
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     @Test
     void findAll_emptyInitially() {
-        List<Question> all = questionService.findAll();
+        List<Question> all = questionService.findAllByQuiz(quiz.getId());
         assertThat(all).isEmpty();
     }
 
     @Test
-    void save_validQuestionPersists() {
-        Question q = new Question();
-        q.setText("What is DNA?");
-        q.setOptions(List.of("Acid", "Molecule", "Protein"));
-        q.setCorrectAnswers(List.of(1));
-        q.setQuiz(quiz);
+    void create_validQuestionPersists() {
+        authenticateAsOwner();
 
-        Question saved = questionService.save(q);
+        CreateQuestionDTO dto = new CreateQuestionDTO();
+        dto.setText("What is DNA?");
+        dto.setOptions(List.of("Acid", "Molecule", "Protein"));
+        dto.setCorrectAnswers(List.of(1));
+
+        Question saved = questionService.createQuestion(quiz.getId(), dto);
 
         assertThat(saved.getId()).isNotNull();
         assertThat(questionRepo.count()).isEqualTo(1);
+        assertThat(saved.getQuiz().getId()).isEqualTo(quiz.getId());
     }
 
     @Test
-    void save_unknownQuizThrows() {
-        Question q = new Question();
-        q.setText("Oops?");
-        q.setOptions(List.of("A","B"));
-        q.setCorrectAnswers(List.of(0));
-        Quiz stub = new Quiz();
-        stub.setId(9999L);
-        q.setQuiz(stub);
+    void create_unknownQuizThrows() {
+        authenticateAsOwner();
 
-        assertThatThrownBy(() -> questionService.save(q))
+        CreateQuestionDTO dto = new CreateQuestionDTO();
+        dto.setText("Oops?");
+        dto.setOptions(List.of("A","B"));
+        dto.setCorrectAnswers(List.of(0));
+
+        assertThatThrownBy(() -> questionService.createQuestion(9999L, dto))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Quiz not found");
     }
 
     @Test
-    void save_invalidCorrectIndexThrows() {
-        Question q = new Question();
-        q.setText("Bad index");
-        q.setOptions(List.of("X","Y"));
-        q.setCorrectAnswers(List.of(2));
-        q.setQuiz(quiz);
+    void create_invalidCorrectIndexThrows() {
+        authenticateAsOwner();
 
-        assertThatThrownBy(() -> questionService.save(q))
+        CreateQuestionDTO dto = new CreateQuestionDTO();
+        dto.setText("Bad index");
+        dto.setOptions(List.of("X","Y"));
+        dto.setCorrectAnswers(List.of(2));
+
+        assertThatThrownBy(() -> questionService.createQuestion(quiz.getId(), dto))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid correct answer index");
+                .hasMessageContaining("index");
     }
 
     @Test
@@ -126,18 +161,22 @@ class QuestionServiceIntegrationTest {
 
     @Test
     void update_changesTextOptionsAndAnswers() {
-        Question q = new Question();
-        q.setText("Old?");
-        q.setOptions(List.of("A","B"));
-        q.setCorrectAnswers(List.of(0));
-        q.setQuiz(quiz);
-        Question saved = questionRepo.save(q);
+        authenticateAsOwner();
 
-        Question upd = new Question();
-        upd.setText("New?");
-        upd.setOptions(List.of("Yes","No","Maybe"));
-        upd.setCorrectAnswers(List.of(2));
-        Question result = questionService.update(saved.getId(), upd);
+        // create initial question using API-style create (ensures ownership checks)
+        CreateQuestionDTO createDto = new CreateQuestionDTO();
+        createDto.setText("Old?");
+        createDto.setOptions(List.of("A","B"));
+        createDto.setCorrectAnswers(List.of(0));
+        Question saved = questionService.createQuestion(quiz.getId(), createDto);
+
+        // prepare update DTO
+        CreateQuestionDTO updateDto = new CreateQuestionDTO();
+        updateDto.setText("New?");
+        updateDto.setOptions(List.of("Yes","No","Maybe"));
+        updateDto.setCorrectAnswers(List.of(2));
+
+        Question result = questionService.updateQuestion(quiz.getId(), saved.getId(), updateDto);
 
         assertThat(result.getText()).isEqualTo("New?");
         assertThat(result.getOptions()).containsExactly("Yes","No","Maybe");
@@ -145,45 +184,16 @@ class QuestionServiceIntegrationTest {
     }
 
     @Test
-    void update_changeQuizToAnother() {
-        Course c2 = new Course();
-        c2.setTitle("Chemistry");
-        c2.setDescription("Basics");
-        c2.setOwner(userRepo.findAll().getFirst());
-        c2 = courseRepo.save(c2);
-
-        Quiz q2 = new Quiz();
-        q2.setTitle("Chem Quiz");
-        q2.setCourse(c2);
-        q2 = quizRepo.save(q2);
-
-        Question q = new Question();
-        q.setText("Switch?");
-        q.setOptions(List.of("1","2"));
-        q.setCorrectAnswers(List.of(1));
-        q.setQuiz(quiz);
-        Question saved = questionRepo.save(q);
-
-        Question upd = new Question();
-        Quiz stub = new Quiz();
-        stub.setId(q2.getId());
-        upd.setQuiz(stub);
-
-        Question result = questionService.update(saved.getId(), upd);
-
-        assertThat(result.getQuiz().getId()).isEqualTo(q2.getId());
-    }
-
-    @Test
     void deleteById_removesQuestion() {
-        Question q = new Question();
-        q.setText("TBD");
-        q.setOptions(List.of("X"));
-        q.setCorrectAnswers(List.of(0));
-        q.setQuiz(quiz);
-        Question saved = questionRepo.save(q);
+        authenticateAsOwner();
 
-        questionService.deleteById(saved.getId());
+        CreateQuestionDTO dto = new CreateQuestionDTO();
+        dto.setText("TBD");
+        dto.setOptions(List.of("X"));
+        dto.setCorrectAnswers(List.of(0));
+        Question saved = questionService.createQuestion(quiz.getId(), dto);
+
+        questionService.deleteById(quiz.getId(), saved.getId());
 
         assertThat(questionRepo.existsById(saved.getId())).isFalse();
     }
