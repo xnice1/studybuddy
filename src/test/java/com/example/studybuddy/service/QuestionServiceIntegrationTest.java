@@ -163,14 +163,12 @@ class QuestionServiceIntegrationTest {
     void update_changesTextOptionsAndAnswers() {
         authenticateAsOwner();
 
-        // create initial question using API-style create (ensures ownership checks)
         CreateQuestionDTO createDto = new CreateQuestionDTO();
         createDto.setText("Old?");
         createDto.setOptions(List.of("A","B"));
         createDto.setCorrectAnswers(List.of(0));
         Question saved = questionService.createQuestion(quiz.getId(), createDto);
 
-        // prepare update DTO
         CreateQuestionDTO updateDto = new CreateQuestionDTO();
         updateDto.setText("New?");
         updateDto.setOptions(List.of("Yes","No","Maybe"));

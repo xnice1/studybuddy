@@ -2,8 +2,10 @@ package com.example.studybuddy.service;
 
 import com.example.studybuddy.model.User;
 import com.example.studybuddy.repository.UserRepository;
+import com.example.studybuddy.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
@@ -13,9 +15,11 @@ import java.util.Optional;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
     private final PasswordEncoder passwordEncoder;
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, CourseRepository courseRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.courseRepository = courseRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -49,8 +53,15 @@ public class UserService {
         existing.setRole(updated.getRole());
         return userRepository.save(existing);
     }
-
     public void deleteById(Long id) {
-        userRepository.deleteById(id);
+        if (courseRepository.existsByOwnerId(id)) {
+            throw new IllegalStateException("User owns one or more courses and cannot be deleted");
+        }
+
+        try {
+            userRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException ex) {
+            throw ex;
+        }
     }
 }
