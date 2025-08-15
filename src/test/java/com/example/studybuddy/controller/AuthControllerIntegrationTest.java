@@ -2,6 +2,9 @@ package com.example.studybuddy.controller;
 
 import com.example.studybuddy.model.User;
 import com.example.studybuddy.dto.RegistrationRequest;
+import com.example.studybuddy.repository.CourseRepository;
+import com.example.studybuddy.repository.QuestionRepository;
+import com.example.studybuddy.repository.QuizRepository;
 import com.example.studybuddy.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,10 +39,15 @@ class AuthControllerIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private CourseRepository courseRepo;
+    @Autowired private QuizRepository quizRepo;
+    @Autowired private QuestionRepository questionRepo;
 
     @BeforeEach
     void setUp() {
-
+        questionRepo.deleteAll();
+        quizRepo.deleteAll();
+        courseRepo.deleteAll();
         userRepository.deleteAll();
         User u = new User();
         u.setUsername("jane");
