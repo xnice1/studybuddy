@@ -1,6 +1,9 @@
 package com.example.studybuddy.security;
 
 import com.example.studybuddy.model.User;
+import com.example.studybuddy.repository.CourseRepository;
+import com.example.studybuddy.repository.QuestionRepository;
+import com.example.studybuddy.repository.QuizRepository;
 import com.example.studybuddy.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +31,15 @@ class SecurityRulesTest {
     private MockMvc mockMvc;
 
     @Autowired
+    private CourseRepository courseRepo;
+
+    @Autowired
+    private QuizRepository quizRepo;
+
+    @Autowired
+    private QuestionRepository questionRepo;
+
+    @Autowired
     private UserRepository userRepo;
 
     @Autowired
@@ -38,24 +50,25 @@ class SecurityRulesTest {
 
     @BeforeEach
     void setUp() {
+        if (questionRepo != null) questionRepo.deleteAll();
+        if (quizRepo != null) quizRepo.deleteAll();
+        if (courseRepo != null) courseRepo.deleteAll();
         userRepo.deleteAll();
-
-        studentToken = "Bearer " + jwtUtils.generateToken("student");
-        adminToken   = "Bearer " + jwtUtils.generateToken("admin");
 
         User student = new User();
         student.setUsername("stu");
         student.setPassword("doesn't matter");
         student.setRole("STUDENT");
         userRepo.save(student);
-        studentToken = "Bearer " + jwtUtils.generateToken(student.getUsername());
 
         User admin = new User();
         admin.setUsername("boss");
         admin.setPassword("also doesn't matter");
         admin.setRole("ADMIN");
         userRepo.save(admin);
-        adminToken = "Bearer " + jwtUtils.generateToken(admin.getUsername());
+
+        studentToken = "Bearer " + jwtUtils.generateToken(student.getUsername());
+        adminToken   = "Bearer " + jwtUtils.generateToken(admin.getUsername());
     }
 
     @Test
