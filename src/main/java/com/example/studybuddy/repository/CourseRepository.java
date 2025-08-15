@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findAllByOwnerUsername(String username);
+    boolean existsByOwnerId(Long ownerId);
 }

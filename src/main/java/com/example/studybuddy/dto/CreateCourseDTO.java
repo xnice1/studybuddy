@@ -11,6 +11,9 @@ public class CreateCourseDTO {
     @Size(max = 1000, message = "Description must be at most 1000 characters")
     private String description;
 
+    private Long ownerId;
+
+    public Long getOwnerId() { return ownerId;}
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }

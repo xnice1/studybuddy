@@ -38,9 +38,10 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
+    @PreAuthorize("hasRole('ADMIN') or isAuthenticated()")
     @Operation(summary = "Get course by ID", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<CourseDTO> findById(@PathVariable Long id) {
+        courseService.ensureOwnerOrAdmin(id);
         Course course = courseService.findById(id);
         return ResponseEntity.ok(toDTO(course));
     }
@@ -54,20 +55,19 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
+    @PreAuthorize("hasRole('ADMIN') or isAuthenticated()")
     @Operation(summary = "Update a course", security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<CourseDTO> update(
-            @PathVariable Long id,
-            @Valid @RequestBody CreateCourseDTO dto
-    ) {
+    public ResponseEntity<CourseDTO> update(@PathVariable Long id, @Valid @RequestBody CreateCourseDTO dto) {
+        courseService.ensureOwnerOrAdmin(id);
         Course updated = courseService.updateFromDto(id, dto);
         return ResponseEntity.ok(toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @courseSecurity.isCourseOwner(principal.username, #id)")
+    @PreAuthorize("hasRole('ADMIN') or isAuthenticated()")
     @Operation(summary = "Delete a course", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> delete(@PathVariable Long id) {
+        courseService.ensureOwnerOrAdmin(id);
         courseService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
