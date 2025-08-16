@@ -65,9 +65,9 @@ class QuestionControllerIntegrationTest {
     }
 
     @Test
-    void unauthenticated_getAll_forbidden() throws Exception {
+    void unauthenticated_getAll_givesUnauthorized() throws Exception {
         mockMvc.perform(get("/api/quizzes/{quizId}/questions", quiz.getId()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
