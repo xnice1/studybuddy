@@ -10,12 +10,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,28 +54,44 @@ public class CourseService {
         return courseRepository.save(course);
     }
 
+    @Transactional
     public Course createCourse(CreateCourseDTO dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new SecurityException("User not authenticated");
-        }
+        String callerUsername = (auth != null) ? auth.getName() : null;
 
-        String username;
-        Object principal = auth.getPrincipal();
-        if (principal instanceof UserDetails) {
-            username = ((UserDetails) principal).getUsername();
-        } else {
-            username = String.valueOf(principal);
+        boolean isAdmin = false;
+        if (auth != null) {
+            isAdmin = auth.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(a -> a.equals("ROLE_ADMIN"));
         }
-
-        User owner = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
         Course course = new Course();
         course.setTitle(dto.getTitle());
         course.setDescription(dto.getDescription());
-        course.setOwner(owner);
 
+        if (dto.getOwnerId() != null) {
+            User targetOwner = userRepository.findById(dto.getOwnerId())
+                    .orElseThrow(() -> new EntityNotFoundException("Owner not found with id " + dto.getOwnerId()));
+
+            if (!isAdmin) {
+                User callingUser = userRepository.findByUsername(callerUsername)
+                        .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException(
+                                "User not found with username: " + callerUsername));
+
+                if (!Objects.equals(callingUser.getId(), targetOwner.getId())) {
+                    throw new AccessDeniedException("Only an admin can assign another user as the course owner");
+                }
+            }
+
+            course.setOwner(targetOwner);
+            return courseRepository.save(course);
+        }
+
+        User callingUser = userRepository.findByUsername(callerUsername)
+                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException(
+                        "User not found with username: " + callerUsername));
+        course.setOwner(callingUser);
         return courseRepository.save(course);
     }
 

@@ -10,7 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -28,7 +28,12 @@ public class RestExceptionHandler {
                         "message", ex.getMessage() != null ? ex.getMessage() : "Access is denied"
                 ));
     }
-
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        log.warn("User lookup failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Forbidden", "message", ex.getMessage()));
+    }
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleBadArgument(IllegalArgumentException ex) {
         log.debug("Bad argument: {}", ex.getMessage());

@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -43,10 +45,22 @@ class CourseServiceIntegrationTest {
         instructor.setRole("ADMIN");
         instructor = userRepository.save(instructor);
 
+        var auth = new UsernamePasswordAuthenticationToken(
+                instructor.getUsername(),
+                "irrelevant",
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         baseCourse = new Course();
         baseCourse.setTitle("Math 101");
         baseCourse.setDescription("Basic arithmetic");
         baseCourse.setOwner(instructor);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
