@@ -111,7 +111,7 @@ class UserControllerIntegrationTest {
     }
 
     @Test
-    void createUser_unauthenticated_forbidden() throws Exception {
+    void createUser_unauthenticated_givesUnauthorized() throws Exception {
         var payload = Map.of(
                 "username", "daniel",
                 "password", "pw",
@@ -120,7 +120,7 @@ class UserControllerIntegrationTest {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
     }
 
 
