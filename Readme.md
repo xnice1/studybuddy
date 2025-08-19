@@ -44,13 +44,18 @@ A small backend service for quizzes and courses with the following goals:
 
 ## Tech stack
 
-- Java 17+
-- Spring Boot (Web, Security, Data JPA, Validation)
-- Spring Security (JWT)
-- H2 (test/dev), any SQL DB in production
-- jjwt for JWT handling
-- springdoc-openapi / Swagger UI
-- JUnit 5, MockMvc for integration tests
+
+- Language & Build: Java 17, Maven
+- Core Framework: Spring Boot (Web, Data JPA, Security)
+- Database: PostgreSQL (HikariCP connection pool) + optionally H2 for tests
+- Security: JWT (jjwt or Spring Security OAuth2 Resource Server)
+- ORM: Hibernate (via Spring Data JPA)
+- Documentation: Springdoc OpenAPI (Swagger UI)
+- Mapping: MapStruct (or manual DTOs)
+- Testing: JUnit 5, Mockito, Spring Boot Test
+- Migration (optional): Flyway or Liquibase
+- CI/CD: GitHub Actions (build, test, deploy)
+- Version Control: Git + GitHub
 
 ---
 
