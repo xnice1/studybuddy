@@ -2549,3 +2549,5 @@ org.springframework.web.bind.MethodArgumentNotValidException: Validation failed 
 2025-08-19 15:11:20.807 DEBUG [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy - Secured POST /api/auth/login
 2025-08-19 15:11:20.809 TRACE [http-nio-8080-exec-2] o.s.s.authentication.ProviderManager - Authenticating request with DaoAuthenticationProvider (1/1)
 2025-08-19 15:11:21.025 DEBUG [http-nio-8080-exec-2] o.s.s.a.d.DaoAuthenticationProvider - Authenticated user
+2025-08-19 16:05:42.147 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-08-19 16:05:42.150 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
