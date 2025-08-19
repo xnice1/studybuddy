@@ -11,12 +11,8 @@ StudyBuddy is a Spring Boot REST API for managing courses, quizzes and questions
 - [Tech stack](#tech-stack)
 - [Quick start (run locally)](#quick-start-run-locally)
 - [Configuration / environment variables](#configuration--environment-variables)
-- [Authentication & Swagger (how to login from the UI)](#authentication--swagger-how-to-login-from-the-ui)
 - [API: important endpoints](#api-important-endpoints)
 - [Testing](#testing)
-- [Developer notes & troubleshooting](#developer-notes--troubleshooting)
-- [Optional: auto-login in Swagger UI (advanced)](#optional-auto-login-in-swagger-ui-advanced)
-- [License](#license)
 
 ---
 
@@ -45,17 +41,16 @@ A small backend service for quizzes and courses with the following goals:
 ## Tech stack
 
 
-- Language & Build: Java 17, Maven
-- Core Framework: Spring Boot (Web, Data JPA, Security)
-- Database: PostgreSQL (HikariCP connection pool) + optionally H2 for tests
-- Security: JWT (jjwt or Spring Security OAuth2 Resource Server)
-- ORM: Hibernate (via Spring Data JPA)
-- Documentation: Springdoc OpenAPI (Swagger UI)
-- Mapping: MapStruct (or manual DTOs)
-- Testing: JUnit 5, Mockito, Spring Boot Test
-- Migration (optional): Flyway or Liquibase
-- CI/CD: GitHub Actions (build, test, deploy)
-- Version Control: Git + GitHub
+- **Language & Build:** Java 24, Maven  
+- **Core framework:** Spring Boot (Web, Data JPA, Security)  
+- **Database:** PostgreSQL  
+- **Security:** JWT (JSON Web Tokens)  
+- **ORM:** Hibernate (via Spring Data JPA)  
+- **API docs:** Springdoc OpenAPI (Swagger UI)  
+- **Mapping:** MapStruct  
+- **Testing:** JUnit 5, Mockito, Spring Boot Test  
+- **CI/CD:** GitHub Actions  
+- **Version control:** Git, GitHub
 
 ---
 
