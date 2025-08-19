@@ -10,9 +10,6 @@ StudyBuddy is a Spring Boot REST API for managing courses, quizzes and questions
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Quick start (run locally)](#quick-start-run-locally)
-- [Configuration / environment variables](#configuration--environment-variables)
-- [API: important endpoints](#api-important-endpoints)
-- [Testing](#testing)
 
 ---
 
