@@ -62,6 +62,7 @@ public class RestExceptionHandler {
                 ));
 
         log.warn("Validation failed: {}", errors);
+        log.debug("MethodArgumentNotValidException details:", ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("errors", errors));
     }

@@ -13,11 +13,12 @@ import org.springframework.http.*;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -49,7 +50,6 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
-
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> loginJson(@Valid @RequestBody LoginRequest creds) {
         return doAuthenticate(creds.getUsername(), creds.getPassword());
@@ -66,26 +66,22 @@ public class AuthController {
         return doAuthenticate(username, password);
     }
 
+
     private ResponseEntity<?> doAuthenticate(String username, String password) {
+        Objects.requireNonNull(username);
+        Objects.requireNonNull(password);
+
         try {
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
+
             String token = jwtUtils.generateToken(auth.getName());
+            return ResponseEntity.ok(Map.of("token", token));
 
-            long expiresInSeconds = jwtUtils.getExpirationMs() / 1000L;
-
-            Map<String, Object> body = Map.of(
-                    "access_token", token,
-                    "token_type", "Bearer",
-                    "expires_in", expiresInSeconds
-            );
-
-            return ResponseEntity.ok(body);
         } catch (BadCredentialsException ex) {
             logger.warn("Bad credentials for user {}", username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "invalid_grant", "error_description", "Invalid credentials"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         } catch (AuthenticationException ex) {
             logger.warn("Authentication failed for user {}: {}", username, ex.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
