@@ -34,6 +34,7 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("error", "Forbidden", "message", ex.getMessage()));
     }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleBadArgument(IllegalArgumentException ex) {
         log.debug("Bad argument: {}", ex.getMessage());
