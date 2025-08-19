@@ -56,11 +56,6 @@ A small backend service for quizzes and courses with the following goals:
 
 ## Quick start (run locally)
 
-Requirements:
-
-- Java 17+
-- Maven or Gradle
-
 From project root (Maven example):
 
 ```bash
