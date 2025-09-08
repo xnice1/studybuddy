@@ -38,7 +38,7 @@ A small backend service for quizzes and courses with the following goals:
 ## Tech stack
 
 
-- **Language & Build:** Java 24, Maven  
+- **Language & Build:** Java 17, Maven  
 - **Core framework:** Spring Boot (Web, Data JPA, Security)  
 - **Database:** PostgreSQL  
 - **Security:** JWT (JSON Web Tokens)  
