@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: studybuddy
+      POSTGRES_USER: studybuddy1
+      POSTGRES_PASSWORD: 1122
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  app:
+    build: .
+    image: studybuddy:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/studybuddy
+      SPRING_DATASOURCE_USERNAME: studybuddy1
+      SPRING_DATASOURCE_PASSWORD: 1122
+      JWT_SECRET: somePassword#1
+      JWT_EXPIRATION_MS: 86400000
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JAVA_TOOL_OPTIONS: -Xmx512m
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+volumes:
+  db-data:
