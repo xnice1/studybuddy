@@ -10,13 +10,6 @@ StudyBuddy is a Spring Boot REST API for managing courses, quizzes and questions
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Quick start (run locally)](#quick-start-run-locally)
-- [Configuration / environment variables](#configuration--environment-variables)
-- [Authentication & Swagger (how to login from the UI)](#authentication--swagger-how-to-login-from-the-ui)
-- [API: important endpoints](#api-important-endpoints)
-- [Testing](#testing)
-- [Developer notes & troubleshooting](#developer-notes--troubleshooting)
-- [Optional: auto-login in Swagger UI (advanced)](#optional-auto-login-in-swagger-ui-advanced)
-- [License](#license)
 
 ---
 
@@ -44,25 +37,14 @@ A small backend service for quizzes and courses with the following goals:
 
 ## Tech stack
 
-- Java 17+
-- Spring Boot (Web, Security, Data JPA, Validation)
-- Spring Security (JWT)
-- H2 (test/dev), any SQL DB in production
-- jjwt for JWT handling
-- springdoc-openapi / Swagger UI
-- JUnit 5, MockMvc for integration tests
 
----
-
-## Quick start (run locally)
-
-Requirements:
-
-- Java 17+
-- Maven or Gradle
-
-From project root (Maven example):
-
-```bash
-./mvnw clean package
-./mvnw spring-boot:run
+- **Language & Build:** Java 17, Maven  
+- **Core framework:** Spring Boot (Web, Data JPA, Security)  
+- **Database:** PostgreSQL  
+- **Security:** JWT (JSON Web Tokens)  
+- **ORM:** Hibernate (via Spring Data JPA)  
+- **API docs:** Springdoc OpenAPI (Swagger UI)  
+- **Mapping:** MapStruct  
+- **Testing:** JUnit 5, Mockito, Spring Boot Test  
+- **CI/CD:** GitHub Actions  
+- **Version control:** Git, GitHub
