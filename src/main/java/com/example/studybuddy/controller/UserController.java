@@ -1,6 +1,6 @@
 package com.example.studybuddy.controller;
 
-import com.example.studybuddy.dto.RegistrationRequest;
+import com.example.studybuddy.dto.UserDTO;
 import com.example.studybuddy.dto.UserResponse;
 import com.example.studybuddy.mapper.UserMapper;
 import com.example.studybuddy.model.User;
@@ -12,20 +12,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
-public class  UserController {
+public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+
+    private static final Set<String> ALLOWED_ROLES =
+            Set.of("ADMIN", "INSTRUCTOR", "STUDENT");
+
     public UserController(UserService userService, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
-
     }
 
     @GetMapping
@@ -43,26 +46,71 @@ public class  UserController {
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<UserResponse> create(@Valid @RequestBody RegistrationRequest req) {
-        User entity = userMapper.toEntity(req);
-        entity.setPassword(req.getPassword());
+    public ResponseEntity<?> create(@Valid @RequestBody UserDTO dto) {
+        if (userService.findByUsername(dto.getUsername()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("errors", Map.of("password", "Password is required")));
+        }
+        if (dto.getPassword().length() < 6) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("errors", Map.of("password", "Password must be at least 6 chars")));
+        }
+
+        String role = (dto.getRole() == null || dto.getRole().isBlank())
+                ? "STUDENT"
+                : dto.getRole().toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_ROLES.contains(role)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("errors", Map.of("role", "Role must be one of: " + ALLOWED_ROLES)));
+        }
+
+        User entity = new User();
+        entity.setUsername(dto.getUsername());
+        entity.setPassword(passwordEncoder.encode(dto.getPassword()));
+        entity.setRole(role);
+
         User saved = userService.save(entity);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(userMapper.toResponse(saved));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(saved));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> update(
+    public ResponseEntity<?> update(
             @PathVariable Long id,
-            @Valid @RequestBody RegistrationRequest req
+            @Valid @RequestBody UserDTO dto
     ) {
-        User toUpdate = new User();
-        toUpdate.setUsername(req.getUsername());
-        toUpdate.setPassword(req.getPassword());
-        toUpdate.setRole(req.getRole());
-        User updated = userService.update(id, toUpdate);
+        User existing = userService.findById(id);
+
+        if (!existing.getUsername().equals(dto.getUsername())
+                && userService.findByUsername(dto.getUsername()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        existing.setUsername(dto.getUsername());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            if (dto.getPassword().length() < 6) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("errors", Map.of("password", "Password must be at least 6 chars")));
+            }
+            existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        if (dto.getRole() != null && !dto.getRole().isBlank()) {
+            String role = dto.getRole().toUpperCase(Locale.ROOT);
+            if (!ALLOWED_ROLES.contains(role)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("errors", Map.of("role", "Role must be one of: " + ALLOWED_ROLES)));
+            }
+            existing.setRole(role);
+        }
+
+        User updated = userService.update(id, existing);
         return ResponseEntity.ok(userMapper.toResponse(updated));
     }
 
