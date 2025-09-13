@@ -2,7 +2,7 @@ name: CI - build, test, publish image
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
   pull_request:
   workflow_dispatch:
 
