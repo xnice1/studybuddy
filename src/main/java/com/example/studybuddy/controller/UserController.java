@@ -30,7 +30,6 @@ public class UserController {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
     }
-    //test
 
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAll() {
