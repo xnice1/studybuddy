@@ -14,7 +14,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Postgres service for tests (reachable as localhost:5432 from runner)
     services:
       postgres:
         image: postgres:15
@@ -41,10 +40,9 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Build with Maven (tests)
-        run: mvn -B clean package
-
       - name: Wait for Postgres to be ready
+        env:
+          PGPASSWORD: 1122
         run: |
           for i in {1..30}; do
             if pg_isready -h localhost -p 5432 -U studybuddy1 -d studybuddy; then
@@ -56,8 +54,6 @@ jobs:
           done
           echo "Postgres did not become ready in time" >&2
           exit 1
-        env:
-          PGPASSWORD: 1122
 
       - name: Run tests (unit + integration)
         env:
@@ -80,6 +76,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        if: success()
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -91,6 +88,7 @@ jobs:
           cache-from: type=gha,scope=studybuddy
           cache-to: type=gha,mode=max,scope=studybuddy
 
+
       - name: Dump surefire reports (on failure)
         if: failure()
         run: |
@@ -98,10 +96,10 @@ jobs:
           ls -la target/surefire-reports || true
           echo "=== failing test xml (first 200 lines each) ==="
           for f in target/surefire-reports/TEST-*.xml; do
-           echo "---- $f ----"
-           sed -n '1,200p' "$f" || true
+            echo "---- $f ----"
+            sed -n '1,200p' "$f" || true
           done
 
-          - name: Re-run mvn tests with debug (on failure)
-            if: failure()
-            run: mvn -X -e -DskipTests=false test
+      - name: Re-run mvn tests with debug (on failure)
+        if: failure()
+        run: mvn -X -e -DskipTests=false test
