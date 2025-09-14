@@ -21,7 +21,6 @@ public interface CourseMapper {
     CourseDTO toDto(Course course);
 
     @Mapping(target = "owner", source = "ownerId",qualifiedByName = "idToOwner")
-    @Mapping(target = "quizzes",source = "id")
     @Mapping(target = "id", source = "id")
     Course fromDto(CourseDTO dto);
 
