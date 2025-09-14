@@ -19,12 +19,12 @@ public interface CourseMapper {
     @Mapping(target = "ownerId", source = "owner.id")
     CourseDTO toDto(Course course);
 
-    @Mapping(target = "owner", source = "ownerId")
+    @Mapping(target = "owner", source = "ownerId",qualifiedByName = "idToOwner")
     @Mapping(target = "id", source = "id")
     Course fromDto(CourseDTO dto);
 
     @Named("idToOwner")
-        default User idToOwner(Long id) {
+    default User idToOwner(Long id) {
         if (id == null) return null;
         User c = new User();
         c.setId(id);
