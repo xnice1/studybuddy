@@ -10,7 +10,7 @@ import org.mapstruct.factory.Mappers;
 public interface QuizMapper {
 
     QuizMapper INSTANCE = Mappers.getMapper(QuizMapper.class);
-
+    @Mapping(target = "courseId", source = "course.id")
     Quiz toEntity(QuizDTO dto);
 
     @Mapping(target = "courseId", source = "course.id")
