@@ -46,7 +46,6 @@ jobs:
         run: |
           for i in {1..30}; do
             if pg_isready -h localhost -p 5432 -U studybuddy1 -d studybuddy; then
-              mvn -B clean package
               echo "postgres ready"
               exit 0
             fi
@@ -55,8 +54,9 @@ jobs:
           done
           echo "Postgres did not become ready in time" >&2
           exit 1
-#      - name: Build with Maven (tests)
-#        run: mvn -B clean package
+
+      - name: Build with Maven (tests)
+        run: mvn -B clean package
 
 
       - name: Set up QEMU
