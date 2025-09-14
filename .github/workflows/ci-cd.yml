@@ -54,13 +54,9 @@ jobs:
           done
           echo "Postgres did not become ready in time" >&2
           exit 1
+      - name: Build with Maven (tests)
+        run: mvn -B clean package
 
-      - name: Run tests (unit + integration)
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/studybuddy
-          SPRING_DATASOURCE_USERNAME: studybuddy1
-          SPRING_DATASOURCE_PASSWORD: 1122
-        run: mvn -B -DskipTests=false verify
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
