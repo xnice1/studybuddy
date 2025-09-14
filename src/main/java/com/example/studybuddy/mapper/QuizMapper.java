@@ -13,9 +13,9 @@ public interface QuizMapper {
 
     Quiz toEntity(QuizDTO dto);
 
-    @Mapping(target = "courseId", source = "course.id")
+    @Mapping(target = "course_id", source = "courseId")
     QuizDTO toDto(Quiz quiz);
 
-    @Mapping(target = "course.id", source = "courseId")
+    @Mapping(target = "course_id", source = "courseId")
     Quiz fromDto(QuizDTO dto);
 }
