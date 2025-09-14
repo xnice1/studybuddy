@@ -18,7 +18,8 @@ public interface QuizMapper {
     @Mapping(target = "courseId", source = "course.id")
     QuizDTO toDto(Quiz quiz);
 
-
+    @Mapping(target = "course", source = "courseId", qualifiedByName = "idToCourse")
+    Quiz fromDto(QuizDTO dto);
 
 
     @Named("idToCourse")
