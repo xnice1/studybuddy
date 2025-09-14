@@ -2,6 +2,7 @@ package com.example.studybuddy.mapper;
 
 import com.example.studybuddy.dto.CourseDTO;
 import com.example.studybuddy.model.Course;
+import com.example.studybuddy.model.Quiz;
 import com.example.studybuddy.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,6 +21,7 @@ public interface CourseMapper {
     CourseDTO toDto(Course course);
 
     @Mapping(target = "owner", source = "ownerId",qualifiedByName = "idToOwner")
+    @Mapping(target = "quizzes",source = "id",qualifiedByName = "idToQuiz")
     @Mapping(target = "id", source = "id")
     Course fromDto(CourseDTO dto);
 
